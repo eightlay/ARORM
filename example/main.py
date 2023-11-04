@@ -36,7 +36,7 @@ def main():
     except:
         pass
     try:
-        TestDAO.get(key=1)
+        TestDAO.get(key="1")
     except:
         pass
     try:
