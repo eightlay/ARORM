@@ -8,39 +8,18 @@ class TestModel(BaseModel):
     # age: int | None = None
     age: int = 0
 
-    class ARORMConfig:
-        allow_create_table = False
-
 
 def main():
-    try:
-        TestModel.create_table()
-    except:
-        pass
-    try:
-        objs = TestModel.all()
-    except:
-        pass
-    try:
-        objs = TestModel.filter(id=1)
-    except:
-        pass
-    try:
-        TestModel.delete(id=1)
-    except:
-        pass
-    try:
-        TestModel.drop_table()
-    except:
-        pass
-    try:
-        obj = TestModel.get(key="1")
-    except:
-        pass
-    try:
-        TestModel.save_record(record=TestModel(id=1, name="test", age=1))
-    except:
-        pass
+    TestModel.create_table()
+    TestModel.save_record(record=TestModel(id=1, name="test", age=1))
+    objs = TestModel.filter(id=1)
+    print(objs)
+    obj = TestModel.get(key="1")
+    print(obj)
+    TestModel.delete(id=1)
+    objs = TestModel.all()
+    print(objs)
+    TestModel.drop_table()
 
 
 if __name__ == "__main__":

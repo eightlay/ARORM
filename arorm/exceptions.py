@@ -11,3 +11,8 @@ class DropTableNotAllowed(Exception):
 class ExtraFieldNotAllowed(Exception):
     def __init__(self, field_name: str) -> None:
         super().__init__(f"Extra field '{field_name}' is not allowed in the query")
+
+
+class TableDoesNotExist(Exception):
+    def __init__(self, table_name: str) -> None:
+        super().__init__(f"Table '{table_name}' does not exist")

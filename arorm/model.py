@@ -4,8 +4,10 @@ import pypika as pp
 import pypika.queries as ppq
 from typing import Any, Type, Iterable
 
+from arorm.pg_driver import PGExecutor
 from arorm.key import Key, generate_tsid
 from arorm.exceptions import (
+    TableDoesNotExist,
     DropTableNotAllowed, 
     ExtraFieldNotAllowed,
     CreateTableNotAllowed, 
@@ -24,10 +26,21 @@ class BaseModel(pydantic.BaseModel):
     id: Key = pydantic.Field(default_factory=generate_tsid)
 
     @classmethod
-    def execute_query(cls, query: str) -> list:
-        # TODO: implement
-        print(query)
-        return []
+    def execute_query(cls, query: str, *args: Any) -> list:
+        return PGExecutor().execute(query, args)
+    
+    @classmethod
+    def _check_table_existance(cls, table_name: str) -> bool:
+        res = cls.execute_query(
+            f"""
+                SELECT EXISTS (
+                    SELECT FROM information_schema.tables 
+                    WHERE  table_name = %s
+                );
+            """,
+            table_name,
+        )
+        return len(res) > 0 and res[0][0]
 
     @classmethod
     def get_pypika_table(cls) -> pp.Table:
@@ -42,6 +55,12 @@ class BaseModel(pydantic.BaseModel):
         for col_name in pydantic_schema["properties"]:
             # TODO: handle anyOf
             col_type = pydantic_schema["properties"][col_name]["type"]
+            col_type = {
+                "integer": "INT",
+                "string": "VARCHAR(255)",
+                "boolean": "BOOLEAN",
+            }[col_type]
+            
             nullable = col_name not in pydantic_schema["required"]
 
             # TODO: support more column settings
@@ -54,11 +73,19 @@ class BaseModel(pydantic.BaseModel):
         cfg = getattr(cls, "ARORMConfig", cls.DefaultARORMConfig)
         val = getattr(cfg, name, getattr(cls.DefaultARORMConfig, name))
         return val
+    
+    @classmethod
+    def _parse_model[T: "BaseModel"](cls: Type[T], values: list[Any]) -> T:
+        obj_dict = {k: v for k, v in zip(cls.model_fields, values)}
+        return cls.model_validate(obj_dict)
 
     @classmethod
     def create_table(cls) -> None:
         if not cls._get_config_value("allow_create_table"):
             raise CreateTableNotAllowed
+        
+        if cls._check_table_existance(cls.__name__.lower()):
+            return
 
         schema = cls.model_json_schema()
 
@@ -75,6 +102,9 @@ class BaseModel(pydantic.BaseModel):
     def drop_table(cls) -> None:
         if not cls._get_config_value("allow_drop_table"):
             raise DropTableNotAllowed
+        
+        if not cls._check_table_existance(cls.__name__.lower()):
+            raise TableDoesNotExist(cls.__name__.lower())
 
         table = cls.get_pypika_table()
         query = pp.Query.drop_table(table)
@@ -91,7 +121,7 @@ class BaseModel(pydantic.BaseModel):
         if len(obj) == 0:
             return None
 
-        return cls.model_validate(obj[0])
+        return cls._parse_model(obj[0])
 
     def save(self) -> None:
         self.save_record(self)
@@ -133,7 +163,7 @@ class BaseModel(pydantic.BaseModel):
         query = query.select("*")
         result = cls.execute_query(query.get_sql())
 
-        return [cls.model_validate(obj) for obj in result]
+        return [cls._parse_model(obj) for obj in result]
 
     @classmethod
     def delete(cls, **kwargs: Any) -> None:
