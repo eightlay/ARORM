@@ -2,23 +2,44 @@ from arorm.model import BaseModel
 
 
 class TestModel(BaseModel):
-    id: int
     name: str
-    # TODO: think about it
-    # age: int | None = None
     age: int = 0
 
 
 def main():
+    # Create table
     TestModel.create_table()
-    TestModel.save_record(record=TestModel(id=1, name="test", age=1))
-    objs = TestModel.filter(id=1)
-    print(objs)
-    obj = TestModel.get(key="1")
-    print(obj)
-    TestModel.delete(id=1)
+
+    # Add records
+    TestModel.save_record(record=TestModel(name="Joey"))
+    TestModel.save_record(record=TestModel(name="Rachel", age=30))
+    chan_record = TestModel(name="Chandler", age=30)
+    chan_record.save()
+
+    # Get all records
     objs = TestModel.all()
-    print(objs)
+    print("All objects\n", objs)
+
+    # Get records with specified parameters
+    objs = TestModel.filter(age=30)
+    print("\n\nObjects with age 30\n", objs)
+
+    # Get record with specified key
+    obj = TestModel.get(key=chan_record.id)
+    print("\n\nObject with specified key\n", obj)
+
+    # Update record
+    chan_record.age = 31
+    chan_record.save()
+    obj = TestModel.get(key=chan_record.id)
+    print("\n\nObject after update\n", obj)
+
+    # Delete record with specified key
+    TestModel.delete(id=chan_record.id)
+    objs = TestModel.all()
+    print("\n\nAll objects after 'chan_record' deletion\n", objs)
+
+    # Drop table
     TestModel.drop_table()
 
 
