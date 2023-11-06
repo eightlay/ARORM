@@ -1,4 +1,3 @@
-from arorm.dao import BaseDAO
 from arorm.model import BaseModel
 
 
@@ -9,38 +8,37 @@ class TestModel(BaseModel):
     # age: int | None = None
     age: int = 0
 
-
-class TestDAO(BaseDAO[TestModel]):
-    model = TestModel
+    class ARORMConfig:
+        allow_create_table = False
 
 
 def main():
     try:
-        TestDAO.create_table()
+        TestModel.create_table()
     except:
         pass
     try:
-        TestDAO.all()
+        objs = TestModel.all()
     except:
         pass
     try:
-        TestDAO.filter(id=1)
+        objs = TestModel.filter(id=1)
     except:
         pass
     try:
-        TestDAO.delete(id=1)
+        TestModel.delete(id=1)
     except:
         pass
     try:
-        TestDAO.drop_table()
+        TestModel.drop_table()
     except:
         pass
     try:
-        TestDAO.get(key="1")
+        obj = TestModel.get(key="1")
     except:
         pass
     try:
-        TestDAO.save(record=TestModel(id=1, name="test", age=1))
+        TestModel.save_record(record=TestModel(id=1, name="test", age=1))
     except:
         pass
 
