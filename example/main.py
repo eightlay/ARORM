@@ -5,6 +5,9 @@ class TestModel(BaseModel):
     name: str
     age: int = 0
 
+    class DefaultARORMConfig:
+        allow_extra_query_fields = False
+
 
 def main():
     # Create table
