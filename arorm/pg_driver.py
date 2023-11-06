@@ -24,7 +24,7 @@ class SingletonMeta(type):
 
 class PGExecutor(metaclass=SingletonMeta):
     """
-    We'll use this property to prove that our Singleton really works.
+    PostgreSQL executor
     """
 
     def __init__(
@@ -40,6 +40,15 @@ class PGExecutor(metaclass=SingletonMeta):
         self.cur = self.conn.cursor()
 
     def execute(self, query: str, args: tuple[Any, ...]) -> list[Any]:
+        """Execute query
+
+        Args:
+            query (str)
+            args (tuple[Any, ...]): query parameters
+
+        Returns:
+            list[Any]: query result (empty list if no result is returned)
+        """
         self.cur.execute(query, args)
 
         try:

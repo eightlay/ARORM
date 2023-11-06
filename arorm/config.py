@@ -13,3 +13,4 @@ class Config(BaseSettings):
 
 
 config = Config()  # type: ignore
+"""PostgreSQL configuration"""
